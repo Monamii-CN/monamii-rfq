@@ -1,7 +1,9 @@
 import scrapy
 
-class rfq_detail():
-    def __init__(self, title, quantity, unit, stars, open_time, origin, buyer, buyer_tag, quote_left, description, link):
+
+class RfqDetail:
+    def __init__(self, title, quantity, unit, stars, open_time, origin, buyer, buyer_tag, quote_left, description,
+                 link):
         self.title = title
         self.quantity = quantity
         self.unit = unit
@@ -13,4 +15,3 @@ class rfq_detail():
         self.quote_left = quote_left
         self.description = description
         self.link = link
-

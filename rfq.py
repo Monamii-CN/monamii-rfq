@@ -70,7 +70,7 @@ class MainSpider(scrapy.Spider, db.MydbOperator):
             rfq_in_db = self.mydb.getByTitleAndBuyer(rfq_title, rfq_buyer)
             if rfq_in_db is None:
                 #Save to DB
-                rfqObj = rfq_detail.rfq_detail(rfq_title, rfq_quantity, rfq_unit, rfq_stars, rfq_open_time, rfq_origin, rfq_buyer, rfq_buyer_tag, rfq_quote, rfq_desc, rfq_link)
+                rfqObj = rfq_detail.RfqDetail(rfq_title, rfq_quantity, rfq_unit, rfq_stars, rfq_open_time, rfq_origin, rfq_buyer, rfq_buyer_tag, rfq_quote, rfq_desc, rfq_link)
                 self.mydb.saveRFQ(rfqObj)
                 #Send RFQ Webhook message
                 if not self.isInitialize:
