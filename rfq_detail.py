@@ -1,6 +1,3 @@
-import scrapy
-
-
 class RfqDetail:
     def __init__(self, title, quantity, unit, stars, open_time, origin, buyer, buyer_tag, quote_left, description,
                  link):

@@ -1,41 +1,36 @@
-from hashlib import md5
-from bs4 import BeautifulSoup
-import sys
 import scrapy
+from bs4 import BeautifulSoup
 from scrapy import signals
-from scrapy.xlib.pydispatch import dispatcher
 from scrapy.exceptions import CloseSpider
+from scrapy.xlib.pydispatch import dispatcher
 
-import rfq_detail
 import db
+import rfq_detail
 import webhook
 
 
 class MainSpider(scrapy.Spider, db.MydbOperator):
-    keyword = sys.argv[0]
-    if keyword is None:
-        sys.exit("Keyword is empty")
-    table_name = sys.argv[1]
-    if table_name is None:
-        sys.exit("Table name is empty")
-    webhook = sys.argv[2]
-    if webhook is None:
-        sys.exit("Webhook URL is empty")
+    #    keyword = sys.argv[1]
+    #   table_name = sys.argv[2]
+    #  webhook_url = sys.argv[3]
     name = 'RFQ Spider'
-    
-    start_urls = ['https://sourcing.alibaba.com/rfq_search_list.htm?spm=a2700.8073608.1998677541.1' + '&searchText=' + keyword +'&recently=Y&tracelog=newest']
-    mydb = db.MydbOperator(table_name)
-    webhook_service = webhook.Webhook()
-    
-    isInitialize = False
 
-    page_limit = 30
-
-    def __init__(self):
+    def __init__(self, keyword='', table_name='', webhook_url='', **kwargs):
         dispatcher.connect(self.spider_closed, signals.spider_closed)
-        self.isInitialize = self.mydb.isEmptyTable()
 
-    def parse(self,response):
+        self.start_urls = [f'https://sourcing.alibaba.com/rfq_search_list.htm?spm=a2700.8073608.1998677541.1&searchText={keyword}&recently=Y&tracelog=newest']
+        self.mydb = db.MydbOperator(table_name)
+        self.webhook_service = webhook.WebHook(webhook_url)
+
+        self.mydb.create_table()
+
+        self.isInitialize = self.mydb.is_empty_table()
+        self.page_limit = 5
+
+        super().__init__(**kwargs)
+
+    def parse(self, response):
+        print("response: " + response.text)
         for rfq_item in response.selector.xpath("//div[@class='rfqSearchList']//div[contains(@class, 'alife-bc-brh-rfq-list__row')]"):
             #RFQ Areas Mapping
             rfq_main_info = rfq_item.xpath("//div[contains(@class, 'brh-rfq-item__main-info')]").get()
@@ -60,18 +55,17 @@ class MainSpider(scrapy.Spider, db.MydbOperator):
             rfq_buyer = rfq_other_info.xpath("//div[@class='text']").get()
             #RFQ Buyer Tag
             rfq_buyer_tag = rfq_other_info.xpath("//div[contains(@class, 'bc-brh-rfq-flag--buyer')]//div[contains(@class, 'next-tag-body')]']").getall()
-            rfq_buyer_tag = " ".join(rfq_buyer_tag)
+            rfq_buyer_tag = "|".join(rfq_buyer_tag)
             #RFQ Quote Mapping
             rfq_quote = rfq_quote_info.xpath("//div[@class='quote-left']/span").get()
             #RFQ Desc Mapping
             rfq_desc = rfq_main_info.xpath("//div[@class='brh-rfq-item__detail']").get()
-            
 
-            rfq_in_db = self.mydb.getByTitleAndBuyer(rfq_title, rfq_buyer)
+            rfq_in_db = self.mydb.get_by_title_and_buyer(rfq_title, rfq_buyer)
             if rfq_in_db is None:
                 #Save to DB
                 rfqObj = rfq_detail.RfqDetail(rfq_title, rfq_quantity, rfq_unit, rfq_stars, rfq_open_time, rfq_origin, rfq_buyer, rfq_buyer_tag, rfq_quote, rfq_desc, rfq_link)
-                self.mydb.saveRFQ(rfqObj)
+                self.mydb.save_rfq(rfqObj)
                 #Send RFQ Webhook message
                 if not self.isInitialize:
                     self.webhook_service.sendMessage()
@@ -80,9 +74,9 @@ class MainSpider(scrapy.Spider, db.MydbOperator):
                 raise CloseSpider("There's no new record yet.")
 
         for next_page in response.selector.xpath("//div[@class='list-pagination']//a[@class='next']"):
-            currentPage = response.selector.xpath("//div[@class='list-pagination']//span[@class='current']")
-            if currentPage <= self.page_limit:
+            current_page = response.selector.xpath("//div[@class='list-pagination']//span[@class='current']/text()").get()
+            if int(current_page) <= self.page_limit:
                 yield response.follow(next_page, self.parse)
-    
+
     def spider_closed(self, spider):
         self.mydb.close()
