@@ -1,3 +1,5 @@
+import os
+
 import scrapy
 from bs4 import BeautifulSoup
 from scrapy import signals
@@ -5,7 +7,6 @@ from scrapy.exceptions import CloseSpider
 from scrapy.xlib.pydispatch import dispatcher
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-import os
 
 import db
 import rfq_detail
