@@ -24,7 +24,7 @@ class MydbOperator:
 
     def create_table(self):
         mycursor = self.mydb.cursor()
-        sql = "CREATE TABLE IF NOT EXISTS rfq_reports." + self.tableName + "( id BIGINT NOT NULL AUTO_INCREMENT , title VARCHAR(255) NOT NULL DEFAULT '\"\"' ,  quantity INT NOT NULL DEFAULT '0' ,  unit VARCHAR(20) NOT NULL DEFAULT '\"\"' ,  stars INT(10) NOT NULL ,  open_time VARCHAR(50) NOT NULL DEFAULT '\"\"' ,  origin VARCHAR(50) NOT NULL DEFAULT '\"\"' ,  buyer VARCHAR(255) NOT NULL DEFAULT '\"\"' ,  buyer_tag VARCHAR(255) NOT NULL DEFAULT '\"\"' ,  quote_left INT(100) NOT NULL DEFAULT '0' ,  description VARCHAR(255) NOT NULL DEFAULT '\"\"' ,  link VARCHAR(255) NOT NULL DEFAULT '\"\"' ,  PRIMARY KEY  (id)) ENGINE = InnoDB;"
+        sql = "CREATE TABLE IF NOT EXISTS rfq_reports." + self.tableName + "(id bigint(20) NOT NULL AUTO_INCREMENT ,title varchar(255) NOT NULL DEFAULT '""',quantity int(11) DEFAULT '0',unit varchar(20) DEFAULT '""',stars int(10) DEFAULT NULL,open_time varchar(50) DEFAULT '""',origin varchar(50) NOT NULL DEFAULT '""',buyer varchar(255) NOT NULL DEFAULT '""',buyer_tag varchar(255) DEFAULT '""',quote_left int(100) DEFAULT '0',description varchar(255) DEFAULT '""',link varchar(255) NOT NULL DEFAULT '""',time_created datetime NOT NULL DEFAULT CURRENT_TIMESTAMP , PRIMARY KEY  (id)) ENGINE = InnoDB;"
         mycursor.execute(sql)
 
     def get_by_title_and_buyer(self, title, buyer):
