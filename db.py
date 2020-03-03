@@ -15,6 +15,7 @@ class MydbOperator:
 
     def __init__(self, keyword):
         self.tableName = self.tableName_prefix + keyword
+        print(self.tableName)
 
     def is_empty_table(self):
 
@@ -30,24 +31,24 @@ class MydbOperator:
 
     def get_by_title_and_buyer(self, title, buyer):
         mycursor = self.mydb.cursor()
-        sql = "SELECT * FROM " + self.tableName + " WHERE " + self.tableName + ".title='" + title + "'" + "and" + self.tableName + ".buyer='" + buyer + "'"
+        sql = "SELECT * FROM " + self.tableName + " WHERE " + self.tableName + ".title='" + title + "'" + " and " + self.tableName + ".buyer='" + buyer + "'"
         mycursor.execute(sql)
         return mycursor.fetchone()
 
-    def save_rfq(self, rfqObj):
+    def save_rfq(self, rfq_object):
         mycursor = self.mydb.cursor()
-        logging.info("Save RFQ Record: " + rfqObj.rfq_title)
+        logging.info("Save RFQ Record: " + rfq_object.title)
 
-        sql = "INSERT INTO " + self.tableName + " (rfq_title, rfq_quantity, rfq_unit, rfq_stars, rfq_open_time, rfq_origin, rfq_buyer, rfq_buyer_tag, rfq_quote, rfq_desc, rfq_link) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-        val = (rfqObj.rfq_title, rfqObj.rfq_quantity, rfqObj.rfq_unit, rfqObj.rfq_stars, rfqObj.rfq_open_time,
-               rfqObj.rfq_origin, rfqObj.rfq_buyer, rfqObj.rfq_buyer_tag, rfqObj.rfq_quote, rfqObj.rfq_desc,
-               rfqObj.rfq_link)
+        sql = "INSERT INTO " + self.tableName + " (title, quantity, unit, stars, open_time, origin, buyer, buyer_tag, quote, desc, link) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        val = (rfq_object.title, rfq_object.quantity, rfq_object.unit, rfq_object.stars, rfq_object.open_time,
+               rfq_object.origin, rfq_object.buyer, rfq_object.buyer_tag, rfq_object.quote_left, rfq_object.description,
+               rfq_object.link)
 
         try:
             mycursor.execute(sql, val)
             self.mydb.commit()
         except:
-            logging.error("Save RFQ Record: " + rfqObj.rfq_title + " fail")
+            logging.error("Save RFQ Record: " + rfq_object.title + " fail")
             self.mydb.rollback()
 
     def close(self):
