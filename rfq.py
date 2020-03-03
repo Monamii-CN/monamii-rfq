@@ -78,7 +78,7 @@ class MainSpider(scrapy.Spider, db.MydbOperator):
             # RFQ Quote Mapping
             rfq_quote = rfq_quote_info.find_element_by_css_selector("div.quote-left span").text
             # RFQ Desc Mapping
-            rfq_desc = rfq_main_info.find_element_by_class_name("brh-rfq-item__detail").text
+            rfq_desc = ""#rfq_main_info.find_element_by_class_name("brh-rfq-item__detail").text
 
             rfq_in_db = self.mydb.get_by_title_and_buyer(rfq_title, rfq_buyer)
 

@@ -11,14 +11,11 @@ class MydbOperator:
     )
 
     tableName_prefix = "t_rfq_"
-    tableName = ""
 
     def __init__(self, keyword):
         self.tableName = self.tableName_prefix + keyword
-        print(self.tableName)
 
     def is_empty_table(self):
-
         mycursor = self.mydb.cursor()
         sql = "SELECT COUNT(*) FROM " + self.tableName
         mycursor.execute(sql)
@@ -40,6 +37,7 @@ class MydbOperator:
         logging.info("Save RFQ Record: " + rfq_object.title)
 
         sql = "INSERT INTO " + self.tableName + " (title, quantity, unit, stars, open_time, origin, buyer, buyer_tag, quote, desc, link) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        print("Executed SQL: " + sql)
         val = (rfq_object.title, rfq_object.quantity, rfq_object.unit, rfq_object.stars, rfq_object.open_time,
                rfq_object.origin, rfq_object.buyer, rfq_object.buyer_tag, rfq_object.quote_left, rfq_object.description,
                rfq_object.link)
