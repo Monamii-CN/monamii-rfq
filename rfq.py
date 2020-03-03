@@ -1,3 +1,4 @@
+import logging
 import os
 
 import scrapy
@@ -7,6 +8,8 @@ from scrapy.exceptions import CloseSpider
 from scrapy.xlib.pydispatch import dispatcher
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.remote.remote_connection import LOGGER
+from urllib3.connectionpool import log as urllibLogger
 
 import db
 import rfq_detail
@@ -22,6 +25,8 @@ class MainSpider(scrapy.Spider, db.MydbOperator):
     # download the chrome driver from https://sites.google.com/a/chromium.org/chromedriver/downloads and put it in the
     # current directory
     chrome_driver = os.getcwd() + "\\chromedriver.exe"
+    LOGGER.setLevel(logging.WARNING)
+    urllibLogger.setLevel(logging.WARNING)
 
     name = 'RFQ Spider'
 
@@ -41,7 +46,7 @@ class MainSpider(scrapy.Spider, db.MydbOperator):
         super().__init__(**kwargs)
 
     def parse(self, response):
-        driver = webdriver.Chrome(chrome_options=self.chrome_options, executable_path=self.chrome_driver)
+        driver = webdriver.Chrome(chrome_options=self.chrome_options, executable_path=self.chrome_driver, service_args=["--info", "--log-path=D:\\qc1.log"])
         driver.get(self.start_urls[0])
         container_elements = driver.find_elements_by_xpath(
             "//div[@class='rfqSearchList']//div[contains(@class, 'alife-bc-brh-rfq-list__row')]")
@@ -62,13 +67,13 @@ class MainSpider(scrapy.Spider, db.MydbOperator):
             rfq_unit = rfq_main_info.find_element_by_xpath(
                 "//div[@class='brh-rfq-item__quantity']/span[position() = 3]").text
             # RFQ Star Mapping
-            rfq_stars = len(rfq_main_info.find_elements_by_xpath("//div[@class='next-rating-overlay']//i"))
+            rfq_stars = str(len(rfq_main_info.find_elements_by_css_selector("div.brh-rfq-item__flags div.next-rating-overlay i")))
             # RFQ Open Time Mapping
             rfq_open_time = rfq_main_info.find_element_by_class_name("brh-rfq-item__open-time").text
             # RFQ Origin Mapping
             rfq_origin = rfq_main_info.find_element_by_class_name("brh-rfq-item__country").text
             # RFQ Buyer Mapping
-            rfq_buyer = rfq_other_info.find_element_by_xpath("//div[@class='text']").text
+            rfq_buyer = rfq_other_info.find_element_by_css_selector("div.avatar div.text").text
             # RFQ Buyer Tag
             rfq_buyer_tag_str = ""
             rfq_buyer_tags = rfq_other_info.find_elements_by_css_selector(
@@ -79,7 +84,11 @@ class MainSpider(scrapy.Spider, db.MydbOperator):
             # RFQ Quote Mapping
             rfq_quote = rfq_quote_info.find_element_by_css_selector("div.quote-left span").text
             # RFQ Desc Mapping
-            rfq_desc = ""#rfq_main_info.find_element_by_class_name("brh-rfq-item__detail").text
+            rfq_desc = rfq_main_info.find_elements_by_class_name("brh-rfq-item__detail")
+            if len(rfq_desc) > 0:
+                rfq_desc = rfq_desc[0]
+            else:
+                rfq_desc = ""
 
             rfq_in_db = self.mydb.get_by_title_and_buyer(rfq_title, rfq_buyer)
 
@@ -94,6 +103,7 @@ class MainSpider(scrapy.Spider, db.MydbOperator):
                     self.webhook_service.sendMessage()
             else:
                 # Quit as reaching existing data records
+                logging.info("Found existing record, hence quite.")
                 raise CloseSpider("There's no new record yet.")
 
     def spider_closed(self, spider):

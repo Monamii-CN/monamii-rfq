@@ -1,9 +1,10 @@
-import mysql.connector
 import logging
+
+import MySQLdb
 
 
 class MydbOperator:
-    mydb = mysql.connector.connect(
+    mydb = MySQLdb.connect(
         host="localhost",
         user="root",
         passwd="",
@@ -36,15 +37,14 @@ class MydbOperator:
         mycursor = self.mydb.cursor()
         logging.info("Save RFQ Record: " + rfq_object.title)
 
-        sql = "INSERT INTO " + self.tableName + " (title, quantity, unit, stars, open_time, origin, buyer, buyer_tag, quote, desc, link) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        sql = "INSERT INTO " + self.tableName + " (title, quantity, unit, stars, open_time, origin, buyer, buyer_tag, quote_left, description, link) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
         val = (rfq_object.title, rfq_object.quantity, rfq_object.unit, rfq_object.stars, rfq_object.open_time,
                rfq_object.origin, rfq_object.buyer, rfq_object.buyer_tag, rfq_object.quote_left, rfq_object.description,
                rfq_object.link)
-
         try:
             mycursor.execute(sql, val)
             self.mydb.commit()
-        except mysql.connector.Error as err:
+        except MySQLdb.Error as err:
             print("Something went wrong: {}".format(err))
             logging.error("Save RFQ Record: " + rfq_object.title + " fail")
             self.mydb.rollback()
