@@ -8,7 +8,9 @@ class MydbOperator:
         host="localhost",
         user="root",
         passwd="",
-        database="rfq_reports"
+        database="rfq_reports",
+        use_unicode=True,
+        charset="utf8"
     )
 
     tableName_prefix = "t_rfq_"
