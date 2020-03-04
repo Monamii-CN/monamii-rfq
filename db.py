@@ -26,7 +26,7 @@ class MydbOperator:
 
     def create_table(self):
         mycursor = self.mydb.cursor()
-        sql = "CREATE TABLE IF NOT EXISTS rfq_reports." + self.tableName + "(id bigint(20) NOT NULL AUTO_INCREMENT ,title varchar(255) NOT NULL DEFAULT '""',quantity int(11) DEFAULT '0',unit varchar(20) DEFAULT '""',stars int(10) DEFAULT NULL,open_time varchar(50) DEFAULT '""',origin varchar(50) NOT NULL DEFAULT '""',buyer varchar(255) NOT NULL DEFAULT '""',buyer_tag varchar(255) DEFAULT '""',quote_left int(100) DEFAULT '0',description varchar(255) DEFAULT '""',link varchar(255) NOT NULL DEFAULT '""',time_created datetime NOT NULL DEFAULT CURRENT_TIMESTAMP , PRIMARY KEY  (id)) ENGINE = InnoDB;"
+        sql = "CREATE TABLE IF NOT EXISTS rfq_reports." + self.tableName + "(id bigint(20) NOT NULL AUTO_INCREMENT ,title varchar(255) NOT NULL DEFAULT '""',quantity int(11) DEFAULT '0',unit varchar(20) DEFAULT '""',stars int(10) DEFAULT NULL,open_time varchar(50) DEFAULT '""',origin varchar(50) NOT NULL DEFAULT '""',buyer varchar(255) NOT NULL DEFAULT '""',buyer_tag varchar(255) DEFAULT '""',quote_left varchar(100) DEFAULT '""',description varchar(255) DEFAULT '""',link varchar(255) NOT NULL DEFAULT '""',time_created datetime NOT NULL DEFAULT CURRENT_TIMESTAMP , PRIMARY KEY  (id)) ENGINE = InnoDB;"
         mycursor.execute(sql)
 
     def get_by_title_and_buyer(self, title, buyer):
