@@ -43,8 +43,9 @@ class MainSpider(scrapy.Spider, db.MydbOperator):
         self.isInitialize = self.mydb.is_empty_table()
         self.page_limit = 5
 
+        self.driver = webdriver.Chrome(chrome_options=self.chrome_options, executable_path=self.chrome_driver,
+                                       service_args=["--info"])
         super().__init__(**kwargs)
-        self.driver = webdriver.Chrome(chrome_options=self.chrome_options, executable_path=self.chrome_driver, service_args=["--info"])
 
     def parse(self, response):
         self.driver.get(response.url)
@@ -67,7 +68,8 @@ class MainSpider(scrapy.Spider, db.MydbOperator):
             rfq_unit = rfq_main_info.find_element_by_xpath(
                 "//div[@class='brh-rfq-item__quantity']/span[position() = 3]").text
             # RFQ Star Mapping
-            rfq_stars = str(len(rfq_main_info.find_elements_by_css_selector("div.brh-rfq-item__flags div.next-rating-overlay i")))
+            rfq_stars = str(
+                len(rfq_main_info.find_elements_by_css_selector("div.brh-rfq-item__flags div.next-rating-overlay i")))
             # RFQ Open Time Mapping
             rfq_open_time = rfq_main_info.find_element_by_class_name("brh-rfq-item__open-time").text
             # RFQ Origin Mapping
@@ -110,10 +112,16 @@ class MainSpider(scrapy.Spider, db.MydbOperator):
                 logging.info("Found existing record, hence quite.")
                 raise CloseSpider("There's no new record yet.")
 
+        # Stop until reach the pre-defined page_limit
         current_page = self.driver.find_element_by_css_selector(".list-pagination span.current").text
         next_page = self.driver.find_element_by_css_selector(".list-pagination a.next").get_attribute("href")
         if int(current_page) <= self.page_limit:
             yield response.follow(next_page, self.parse)
+
+        # Stop until the last page
+        # next_page_disabled = self.driver.find_element_by_css_selector(".list-pagination a.next").get_property("class")
+        # if not "disable" in next_page_disabled:
+        #    yield response.follow(next_page, self.parse)
 
     def spider_closed(self, spider):
         self.mydb.close()
