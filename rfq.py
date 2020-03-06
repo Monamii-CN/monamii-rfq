@@ -43,12 +43,13 @@ class MainSpider(scrapy.Spider, db.MydbOperator):
         self.isInitialize = self.mydb.is_empty_table()
         self.page_limit = 5
 
+        self.driver = webdriver.Chrome(chrome_options=self.chrome_options, executable_path=self.chrome_driver,
+                                       service_args=["--info"])
         super().__init__(**kwargs)
 
     def parse(self, response):
-        driver = webdriver.Chrome(chrome_options=self.chrome_options, executable_path=self.chrome_driver, service_args=["--info", "--log-path=D:\\qc1.log"])
-        driver.get(self.start_urls[0])
-        container_elements = driver.find_elements_by_xpath(
+        self.driver.get(response.url)
+        container_elements = self.driver.find_elements_by_xpath(
             "//div[@class='rfqSearchList']//div[contains(@class, 'alife-bc-brh-rfq-list__row')]")
         for container_element in container_elements:
             # RFQ Areas Mapping
@@ -67,7 +68,8 @@ class MainSpider(scrapy.Spider, db.MydbOperator):
             rfq_unit = rfq_main_info.find_element_by_xpath(
                 "//div[@class='brh-rfq-item__quantity']/span[position() = 3]").text
             # RFQ Star Mapping
-            rfq_stars = str(len(rfq_main_info.find_elements_by_css_selector("div.brh-rfq-item__flags div.next-rating-overlay i")))
+            rfq_stars = str(
+                len(rfq_main_info.find_elements_by_css_selector("div.brh-rfq-item__flags div.next-rating-overlay i")))
             # RFQ Open Time Mapping
             rfq_open_time = rfq_main_info.find_element_by_class_name("brh-rfq-item__open-time").text
             # RFQ Origin Mapping
@@ -82,11 +84,15 @@ class MainSpider(scrapy.Spider, db.MydbOperator):
                 rfq_buyer_tag_str = rfq_buyer_tag.text + "|"
             rfq_buyer_tag_str = rfq_buyer_tag_str[0:len(rfq_buyer_tag_str) - 1]
             # RFQ Quote Mapping
-            rfq_quote = rfq_quote_info.find_element_by_css_selector("div.quote-left span").text
+            rfq_quote = ""
+            if len(rfq_quote_info.find_elements_by_css_selector("div.quote-left")) > 0:
+                rfq_quote = rfq_quote_info.find_elements_by_css_selector("div.quote-left")[0].text
+            elif len(rfq_quote_info.find_elements_by_css_selector("div.quote-extra")) > 0:
+                rfq_quote = rfq_quote_info.find_elements_by_css_selector("div.quote-extra")[0].text
             # RFQ Desc Mapping
             rfq_desc = rfq_main_info.find_elements_by_class_name("brh-rfq-item__detail")
             if len(rfq_desc) > 0:
-                rfq_desc = rfq_desc[0]
+                rfq_desc = rfq_desc[0].text
             else:
                 rfq_desc = ""
 
@@ -105,6 +111,17 @@ class MainSpider(scrapy.Spider, db.MydbOperator):
                 # Quit as reaching existing data records
                 logging.info("Found existing record, hence quite.")
                 raise CloseSpider("There's no new record yet.")
+
+        # Stop until reach the pre-defined page_limit
+        current_page = self.driver.find_element_by_css_selector(".list-pagination span.current").text
+        next_page = self.driver.find_element_by_css_selector(".list-pagination a.next").get_attribute("href")
+        if int(current_page) <= self.page_limit:
+            yield response.follow(next_page, self.parse)
+
+        # Stop until the last page
+        # next_page_disabled = self.driver.find_element_by_css_selector(".list-pagination a.next").get_property("class")
+        # if not "disable" in next_page_disabled:
+        #    yield response.follow(next_page, self.parse)
 
     def spider_closed(self, spider):
         self.mydb.close()
