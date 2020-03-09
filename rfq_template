@@ -1,0 +1,11 @@
+### %title%
+> ##### 数量:  %quantity%
+> ##### 单位:  %unit%
+> ##### 星级: %stars%
+> ##### 发布时间: %open_time%
+> ##### 发布地区: %origin%
+> ##### 买家名称: %buyer%
+> ##### 买家标签: %buyer_tag%
+> ##### 剩余席位: %quote_left%
+> ##### 描述:  %description%
+> ##### 链接地址: %link%

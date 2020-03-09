@@ -4,12 +4,6 @@ import time
 
 import requests
 
-# TOKEN = "https://oapi.dingtalk.com/robot/send?access_token=f8da3ff447e780aaa9fd6aea02bff40076ec064d7d2fb01ff022182d1a05e282"
-# SECRET = "test"
-# headers = {'Content-Type': 'application/json;charset=utf-8'}
-
-# from dingtalkchatbot.chatbot import DingtalkChatbot
-
 try:
     JSONDecodeError = json.decoder.JSONDecodeError
 except AttributeError:
@@ -233,6 +227,16 @@ class WebHook:
                     requests.post(self.webhook_url, headers=self.headers, data=json.dumps(error_data))
                 return result
 
+    def format_with_template(self, rfq_object):
+        with open('rfq_template', 'r', encoding="utf8") as file:
+            data = file.read().replace('%title%', rfq_object.title).replace('%quantity%', rfq_object.quantity)\
+                .replace('%unit%', rfq_object.unit).replace('%stars%', rfq_object.stars)\
+                .replace('%open_time%', rfq_object.open_time).replace('%origin%', rfq_object.origin)\
+                .replace('%buyer%', rfq_object.buyer).replace('%buyer_tag%', rfq_object.buyer_tag)\
+                .replace('%quote_left%', rfq_object.quote_left).replace('%description%', rfq_object.description)\
+                .replace('%link%', rfq_object.link)
+            return data
+
     # def get_url(self):
     #     # 钉钉官方要求，请求的url中必须携带三个参数，access_token， timestamp，sign(签名是由secret加密而来)
     #     timestamp = round(time.time() * 1000)
@@ -393,9 +397,3 @@ class CardItem(object):
         else:
             logging.error("CardItem是ActionCard的子控件时，title、url不能为空；是FeedCard的子控件时，title、url、pic_url不能为空！")
             raise ValueError("CardItem是ActionCard的子控件时，title、url不能为空；是FeedCard的子控件时，title、url、pic_url不能为空！")
-
-
-if __name__ == "__main__":
-    webhook = 'https://oapi.dingtalk.com/robot/send?access_token=f8da3ff447e780aaa9fd6aea02bff40076ec064d7d2fb01ff022182d1a05e282'
-    xiaoding = WebHook(webhook)
-    xiaoding.send_text(msg='测试', is_at_all=True)
