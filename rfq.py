@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 
@@ -36,6 +37,7 @@ class MainSpider(scrapy.Spider, db.MydbOperator):
         self.start_urls = [
             f'https://sourcing.alibaba.com/rfq_search_list.htm?spm=a2700.8073608.1998677541.1&searchText={keyword}&recently=Y&tracelog=newest']
         self.mydb = db.MydbOperator(table_name)
+        print(webhook_url)
         self.webhook_service = webhook.WebHook(webhook_url)
 
         self.mydb.create_table()
@@ -58,7 +60,7 @@ class MainSpider(scrapy.Spider, db.MydbOperator):
             rfq_quote_info = container_element.find_element_by_class_name("brh-rfq-quote-now")
             # RFQ Title And URL Mapping
             rfq_title_raw = rfq_main_info.find_element_by_css_selector("a.brh-rfq-item__subject-link")
-            soup = BeautifulSoup(rfq_title_raw.get_attribute("title"))
+            soup = BeautifulSoup(rfq_title_raw.get_attribute("title"), features="lxml")
             rfq_title = soup.get_text()
             rfq_link = rfq_title_raw.get_attribute("href")
             # RFQ Quantity Mapping
@@ -106,7 +108,8 @@ class MainSpider(scrapy.Spider, db.MydbOperator):
                 self.mydb.save_rfq(rfq_object)
                 # Send RFQ Webhook message
                 if not self.isInitialize:
-                    self.webhook_service.sendMessage()
+                    post_data = json.dumps(rfq_object, indent=4, cls=rfq_detail.RfqDetailEncoder)
+                    self.webhook_service.send_text(post_data, True)
             else:
                 # Quit as reaching existing data records
                 logging.info("Found existing record, hence quite.")
