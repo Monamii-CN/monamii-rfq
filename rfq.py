@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 
@@ -75,7 +74,7 @@ class MainSpider(scrapy.Spider, db.MydbOperator):
             # RFQ Open Time Mapping
             rfq_open_time = rfq_main_info.find_element_by_class_name("brh-rfq-item__open-time").text
             # RFQ Origin Mapping
-            rfq_origin = rfq_main_info.find_element_by_class_name("brh-rfq-item__country").text
+            rfq_origin = rfq_main_info.find_element_by_class_name("brh-rfq-item__country").text.replace("Posted in:\n", " ")
             # RFQ Buyer Mapping
             rfq_buyer = rfq_other_info.find_element_by_css_selector("div.avatar div.text").text
             # RFQ Buyer Tag
@@ -108,8 +107,8 @@ class MainSpider(scrapy.Spider, db.MydbOperator):
                 self.mydb.save_rfq(rfq_object)
                 # Send RFQ Webhook message
                 if not self.isInitialize:
-                    post_data = json.dumps(rfq_object, indent=4, cls=rfq_detail.RfqDetailEncoder)
-                    self.webhook_service.send_text(post_data, True)
+                    formatted_context = self.webhook_service.format_with_template(rfq_object)
+                    self.webhook_service.send_markdown(rfq_title, formatted_context, True)
             else:
                 # Quit as reaching existing data records
                 logging.info("Found existing record, hence quite.")
