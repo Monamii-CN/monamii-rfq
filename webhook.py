@@ -235,6 +235,7 @@ class WebHook:
                 .replace('%buyer%', rfq_object.buyer).replace('%buyer_tag%', rfq_object.buyer_tag)\
                 .replace('%quote_left%', rfq_object.quote_left).replace('%description%', rfq_object.description)\
                 .replace('%link%', rfq_object.link)
+            file.close()
             return data
 
     # def get_url(self):
