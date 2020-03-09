@@ -1,3 +1,6 @@
+from json import JSONEncoder
+
+
 class RfqDetail:
     def __init__(self, title, quantity, unit, stars, open_time, origin, buyer, buyer_tag, quote_left, description,
                  link):
@@ -12,3 +15,8 @@ class RfqDetail:
         self.quote_left = quote_left
         self.description = description
         self.link = link
+
+
+class RfqDetailEncoder(JSONEncoder):
+    def default(self, o):
+        return o.__dict__

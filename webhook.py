@@ -1,11 +1,6 @@
-import base64
-import hashlib
-import hmac
 import json
 import logging
 import time
-# from dingtalkchatbot.chatbot import DingtalkChatbot
-import urllib
 
 import requests
 
@@ -13,10 +8,13 @@ import requests
 # SECRET = "test"
 # headers = {'Content-Type': 'application/json;charset=utf-8'}
 
+# from dingtalkchatbot.chatbot import DingtalkChatbot
+
 try:
     JSONDecodeError = json.decoder.JSONDecodeError
 except AttributeError:
     JSONDecodeError = ValueError
+
 
 def is_not_null_and_blank_str(content):
     """
@@ -37,7 +35,9 @@ def is_not_null_and_blank_str(content):
     else:
         return False
 
-class WebHook(object):
+
+class WebHook:
+
     def __init__(self, webhook_url):
         """
         机器人初始化
@@ -107,15 +107,16 @@ class WebHook(object):
         :param pic_url: 图片URL（可选）
         :return: 返回消息发送结果
         """
-        if is_not_null_and_blank_str(title) and is_not_null_and_blank_str(text) and is_not_null_and_blank_str(message_url):
+        if is_not_null_and_blank_str(title) and is_not_null_and_blank_str(text) and is_not_null_and_blank_str(
+                message_url):
             data = {
-                    "msgtype": "link",
-                    "link": {
-                        "text": text,
-                        "title": title,
-                        "picUrl": pic_url,
-                        "messageUrl": message_url
-                    }
+                "msgtype": "link",
+                "link": {
+                    "text": text,
+                    "title": title,
+                    "picUrl": pic_url,
+                    "messageUrl": message_url
+                }
             }
             logging.debug('link类型：%s' % data)
             return self.post(data)
@@ -202,7 +203,6 @@ class WebHook(object):
                 logging.debug('钉钉官方限制每个机器人每分钟最多发送20条，当前消息发送频率已达到限制条件，休眠一分钟')
                 time.sleep(60)
             self.start_time = time.time()
-
         post_data = json.dumps(data)
         try:
             response = requests.post(self.webhook_url, headers=self.headers, data=post_data)
@@ -227,7 +227,8 @@ class WebHook(object):
             else:
                 logging.debug('发送结果：%s' % result)
                 if result['errcode']:
-                    error_data = {"msgtype": "text", "text": {"content": "钉钉机器人消息发送失败，原因：%s" % result['errmsg']}, "at": {"isAtAll": True}}
+                    error_data = {"msgtype": "text", "text": {"content": "钉钉机器人消息发送失败，原因：%s" % result['errmsg']},
+                                  "at": {"isAtAll": True}}
                     logging.error("消息发送失败，自动通知：%s" % error_data)
                     requests.post(self.webhook_url, headers=self.headers, data=json.dumps(error_data))
                 return result
@@ -246,7 +247,6 @@ class WebHook(object):
     #                                                                                                  sign)
     #     return api_url
 
-
     # @classmethod
     # def sendMessage(self):
     #     return ""
@@ -256,6 +256,7 @@ class ActionCard(object):
     """
     ActionCard类型消息格式（整体跳转、独立跳转）
     """
+
     def __init__(self, title, text, btns, btn_orientation=0, hide_avatar=0):
         """
         ActionCard初始化
@@ -287,15 +288,15 @@ class ActionCard(object):
             if len(self.btns) == 1:
                 # 整体跳转ActionCard类型
                 data = {
-                        "msgtype": "actionCard",
-                        "actionCard": {
-                            "title": self.title,
-                            "text": self.text,
-                            "hideAvatar": self.hide_avatar,
-                            "btnOrientation": self.btn_orientation,
-                            "singleTitle": self.btns[0]["title"],
-                            "singleURL": self.btns[0]["actionURL"]
-                        }
+                    "msgtype": "actionCard",
+                    "actionCard": {
+                        "title": self.title,
+                        "text": self.text,
+                        "hideAvatar": self.hide_avatar,
+                        "btnOrientation": self.btn_orientation,
+                        "singleTitle": self.btns[0]["title"],
+                        "singleURL": self.btns[0]["actionURL"]
+                    }
                 }
                 return data
             else:
@@ -320,6 +321,7 @@ class FeedLink(object):
     """
     FeedCard类型单条消息格式
     """
+
     def __init__(self, title, message_url, pic_url):
         """
         初始化单条消息文本
@@ -337,11 +339,12 @@ class FeedLink(object):
         获取FeedLink消息数据（字典）
         :return: 本FeedLink消息的数据
         """
-        if is_not_null_and_blank_str(self.title) and is_not_null_and_blank_str(self.message_url) and is_not_null_and_blank_str(self.pic_url):
+        if is_not_null_and_blank_str(self.title) and is_not_null_and_blank_str(
+                self.message_url) and is_not_null_and_blank_str(self.pic_url):
             data = {
-                    "title": self.title,
-                    "messageURL": self.message_url,
-                    "picURL": self.pic_url
+                "title": self.title,
+                "messageURL": self.message_url,
+                "picURL": self.pic_url
             }
             return data
         else:
@@ -371,7 +374,8 @@ class CardItem(object):
         获取CardItem子控件数据（字典）
         @return: 子控件的数据
         """
-        if is_not_null_and_blank_str(self.pic_url) and is_not_null_and_blank_str(self.title) and is_not_null_and_blank_str(self.url):
+        if is_not_null_and_blank_str(self.pic_url) and is_not_null_and_blank_str(
+                self.title) and is_not_null_and_blank_str(self.url):
             # FeedCard类型
             data = {
                 "title": self.title,
@@ -389,8 +393,6 @@ class CardItem(object):
         else:
             logging.error("CardItem是ActionCard的子控件时，title、url不能为空；是FeedCard的子控件时，title、url、pic_url不能为空！")
             raise ValueError("CardItem是ActionCard的子控件时，title、url不能为空；是FeedCard的子控件时，title、url、pic_url不能为空！")
-
-
 
 
 if __name__ == "__main__":
